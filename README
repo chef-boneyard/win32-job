@@ -1,0 +1,13 @@
+= Description
+  A Ruby interface to Windows Jobs.
+
+= Synopsis
+  require 'win32/job'
+  include Win32
+
+  job = Job.create('test')
+
+  job.add_process(1234)
+  job.add_process(1235)
+
+  job.close
