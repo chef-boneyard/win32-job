@@ -52,6 +52,17 @@ module Windows
       )
     end
 
+    class JOBOBJECT_EXTENDED_LIMIT_INFORMATION < FFI::Struct
+      layout(
+        :BasicLimitInformation, JOBOBJECT_BASIC_LIMIT_INFORMATION,
+        :IoInfo, IO_COUNTERS,
+        :ProcessMemoryLimit, :size_t,
+        :JobMemoryLimit, :size_t,
+        :PeakProcessMemoryUsed, :size_t,
+        :PeakJobMemoryUsed, :size_t
+      )
+    end
+
     # Ruby Structs
 
     AccountInfo = Struct.new('AccountInfo',
@@ -80,7 +91,17 @@ module Windows
       :active_process_limit,
       :affinity,
       :priority_class,
-      :scheduling_class
+      :scheduling_class,
+      :read_operation_count,
+      :write_operation_count,
+      :other_operation_count,
+      :read_transfer_count,
+      :write_transfer_count,
+      :other_transfer_count,
+      :process_memory_limit,
+      :job_memory_limit,
+      :peak_process_memory_used,
+      :peek_job_memory_used
     )
   end
 end

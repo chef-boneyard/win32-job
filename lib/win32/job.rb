@@ -216,7 +216,7 @@ module Win32
         info[:IoInfo][:OtherOperationCount],
         info[:IoInfo][:ReadTransferCount],
         info[:IoInfo][:WriteTransferCount],
-        info[:IoInfo][:OtherTransferCount],
+        info[:IoInfo][:OtherTransferCount]
       )
 
       struct
@@ -225,11 +225,11 @@ module Win32
     # Return limit information for the process group.
     #
     def limit_info
-      info = JOBOBJECT_BASIC_LIMIT_INFORMATION.new
+      info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION.new
 
       bool = QueryInformationJobObject(
         @job_handle,
-        JobObjectBasicLimitInformation,
+        JobObjectExtendedLimitInformation,
         info,
         info.size,
         nil
@@ -240,15 +240,25 @@ module Win32
       end
 
       struct = LimitInfo.new(
-        info[:PerProcessUserTimeLimit],
-        info[:PerJobUserTimeLimit],
-        info[:LimitFlags],
-        info[:MinimumWorkingSetSize],
-        info[:MaximumWorkingSetSize],
-        info[:ActiveProcessLimit],
-        info[:Affinity],
-        info[:PriorityClass],
-        info[:SchedulingClass]
+        info[:BasicLimitInformation][:PerProcessUserTimeLimit],
+        info[:BasicLimitInformation][:PerJobUserTimeLimit],
+        info[:BasicLimitInformation][:LimitFlags],
+        info[:BasicLimitInformation][:MinimumWorkingSetSize],
+        info[:BasicLimitInformation][:MaximumWorkingSetSize],
+        info[:BasicLimitInformation][:ActiveProcessLimit],
+        info[:BasicLimitInformation][:Affinity],
+        info[:BasicLimitInformation][:PriorityClass],
+        info[:BasicLimitInformation][:SchedulingClass],
+        info[:IoInfo][:ReadOperationCount],
+        info[:IoInfo][:WriteOperationCount],
+        info[:IoInfo][:OtherOperationCount],
+        info[:IoInfo][:ReadTransferCount],
+        info[:IoInfo][:WriteTransferCount],
+        info[:IoInfo][:OtherTransferCount],
+        info[:ProcessMemoryLimit],
+        info[:JobMemoryLimit],
+        info[:PeakProcessMemoryUsed],
+        info[:PeakJobMemoryUsed]
       )
 
       struct
