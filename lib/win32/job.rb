@@ -10,6 +10,7 @@ module Win32
     include Windows::Constants
     include Windows::Functions
     include Windows::Structs
+    extend Windows::Functions
 
     # The version of the win32-job library
     VERSION = '0.1.0'
@@ -36,7 +37,6 @@ module Win32
 
     public
 
-    #attr_reader :process_list
     attr_reader :job_name
 
     alias :name :job_name
@@ -53,6 +53,7 @@ module Win32
 
       @job_name = name
       @process_list = []
+      @closed = false
 
       @job_handle = CreateJobObject(security, name)
 
@@ -67,12 +68,18 @@ module Win32
           close
         end
       end
+
+      ObjectSpace.define_finalizer(self, self.class.finalize(@job_handle, @closed))
     end
 
     # Add process +pid+ to the job object. Process ID's added to the
     # job are tracked via the Job#process_list accessor.
     #
     def add_process(pid)
+      if @process_list.size > 99
+        raise ArgumentError, "maximum number of processes reached"
+      end
+
       phandle = OpenProcess(PROCESS_ALL_ACCESS, false, pid)
 
       if phandle == 0
@@ -85,13 +92,10 @@ module Win32
 
       if pbool.read_int == 0
         unless AssignProcessToJobObject(@job_handle, phandle)
-          error = FFI.errno
-          close
-          raise SystemCallError.new('AssignProcessToJobObject', error)
+          raise SystemCallError.new('AssignProcessToJobObject', FFI.errno)
         end
         @process_list << pid
       else
-        close
         raise ArgumentError, "pid #{pid} is already part of a job"
       end
 
@@ -102,6 +106,11 @@ module Win32
     #
     def close
       CloseHandle(@job_handle) if @job_handle
+      @closed = true
+    end
+
+    def self.finalize(handle, closed)
+      proc{ CloseHandle(handle) unless closed }
     end
 
     # Kill all processes associated with the job object that is
@@ -157,6 +166,8 @@ module Win32
       end
     end
 
+    # Return a list of process ids that are part of the job.
+    #
     def process_list
       info = JOBOBJECT_BASIC_PROCESS_ID_LIST.new
 
@@ -169,13 +180,10 @@ module Win32
       )
 
       unless bool
-        error = FFI.errno
-        close
-        raise SystemCallError.new('QueryInformationJobObject', error)
+        raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
       end
 
-      p info[:NumberOfAssignedProcesses]
-      #p info[:ProcessIdList]
+      info[:ProcessIdList].to_a.select{ |n| n != 0 }
     end
   end
 end
@@ -190,6 +198,6 @@ if $0 == __FILE__
   p pid2
   j.add_process(pid1)
   j.add_process(pid2)
-  j.process_list
+  p j.process_list
   j.close
 end
