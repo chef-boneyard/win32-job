@@ -38,6 +38,20 @@ module Windows
       layout(:BasicInfo, JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, :IoInfo, IO_COUNTERS)
     end
 
+    class JOBOBJECT_BASIC_LIMIT_INFORMATION < FFI::Struct
+      layout(
+        :PerProcessUserTimeLimit, :uintptr_t,
+        :PerJobUserTimeLimit, :uintptr_t,
+        :LimitFlags, :ulong,
+        :MinimumWorkingSetSize, :size_t,
+        :MaximumWorkingSetSize, :size_t,
+        :ActiveProcessLimit, :ulong,
+        :Affinity, :uintptr_t,
+        :PriorityClass, :ulong,
+        :SchedulingClass, :ulong
+      )
+    end
+
     # Ruby Structs
 
     AccountInfo = Struct.new('AccountInfo',
@@ -55,6 +69,18 @@ module Windows
       :read_transfer_count,
       :write_transfer_count,
       :other_transfer_count
+    )
+
+    LimitInfo = Struct.new('LimitInfo',
+      :per_process_user_time_limit,
+      :per_job_user_time_limit,
+      :limit_flags,
+      :minimum_working_set_size,
+      :maximum_working_set_size,
+      :active_process_limit,
+      :affinity,
+      :priority_class,
+      :scheduling_class
     )
   end
 end

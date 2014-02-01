@@ -192,7 +192,7 @@ module Win32
 
       bool = QueryInformationJobObject(
         @job_handle,
-        JobObjectBasicProcessIdList,
+        JobObjectBasicAndIoAccountingInformation,
         info,
         info.size,
         nil
@@ -202,21 +202,54 @@ module Win32
         raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
       end
 
-      struct = AccountInfo.new
-      struct[:total_user_time] = info[:BasicInfo][:TotalUserTime]
-      struct[:total_kernel_time] = info[:BasicInfo][:TotalKernelTime]
-      struct[:this_period_total_user_time] = info[:BasicInfo][:ThisPeriodTotalUserTime]
-      struct[:this_period_total_kernel_time] = info[:BasicInfo][:ThisPeriodTotalKernelTime]
-      struct[:total_page_fault_count] = info[:BasicInfo][:TotalPageFaultCount]
-      struct[:total_processes] = info[:BasicInfo][:TotalProcesses]
-      struct[:active_processes] = info[:BasicInfo][:ActiveProcesses]
-      struct[:total_terminated_processes] = info[:BasicInfo][:TotalTerminatedProcesses]
-      struct[:read_operation_count] = info[:IoInfo][:ReadOperationCount]
-      struct[:write_operation_count] = info[:IoInfo][:WriteOperationCount]
-      struct[:other_operation_count] = info[:IoInfo][:OtherOperationCount]
-      struct[:read_transfer_count] = info[:IoInfo][:ReadTransferCount]
-      struct[:write_transfer_count] = info[:IoInfo][:WriteTransferCount]
-      struct[:other_transfer_count] = info[:IoInfo][:OtherTransferCount]
+      struct = AccountInfo.new(
+        info[:BasicInfo][:TotalUserTime],
+        info[:BasicInfo][:TotalKernelTime],
+        info[:BasicInfo][:ThisPeriodTotalUserTime],
+        info[:BasicInfo][:ThisPeriodTotalKernelTime],
+        info[:BasicInfo][:TotalPageFaultCount],
+        info[:BasicInfo][:TotalProcesses],
+        info[:BasicInfo][:ActiveProcesses],
+        info[:BasicInfo][:TotalTerminatedProcesses],
+        info[:IoInfo][:ReadOperationCount],
+        info[:IoInfo][:WriteOperationCount],
+        info[:IoInfo][:OtherOperationCount],
+        info[:IoInfo][:ReadTransferCount],
+        info[:IoInfo][:WriteTransferCount],
+        info[:IoInfo][:OtherTransferCount],
+      )
+
+      struct
+    end
+
+    # Return limit information for the process group.
+    #
+    def limit_info
+      info = JOBOBJECT_BASIC_LIMIT_INFORMATION.new
+
+      bool = QueryInformationJobObject(
+        @job_handle,
+        JobObjectBasicLimitInformation,
+        info,
+        info.size,
+        nil
+      )
+
+      unless bool
+        raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
+      end
+
+      struct = LimitInfo.new(
+        info[:PerProcessUserTimeLimit],
+        info[:PerJobUserTimeLimit],
+        info[:LimitFlags],
+        info[:MinimumWorkingSetSize],
+        info[:MaximumWorkingSetSize],
+        info[:ActiveProcessLimit],
+        info[:Affinity],
+        info[:PriorityClass],
+        info[:SchedulingClass]
+      )
 
       struct
     end
@@ -229,8 +262,8 @@ if $0 == __FILE__
   j.process_list
   pid1 = Process.spawn("notepad.exe")
   pid2 = Process.spawn("notepad.exe")
-  p pid1
-  p pid2
+  #p pid1
+  #p pid2
   j.add_process(pid1)
   j.add_process(pid2)
   p j.process_list
@@ -238,5 +271,7 @@ if $0 == __FILE__
   p j.account_info
   sleep 10
   p j.account_info
+  p j.limit_info
+  sleep 5
   j.close
 end
