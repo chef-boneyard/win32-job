@@ -1,21 +1,15 @@
-require 'rubygems'
-require 'windows/error'
-require 'windows/process'
-require 'windows/security'
-require 'windows/handle'
+require File.join(File.dirname(__FILE__), 'job', 'constants')
+require File.join(File.dirname(__FILE__), 'job', 'functions')
+require File.join(File.dirname(__FILE__), 'job', 'structs')
 
 # The Win32 module serves as a namespace only.
 module Win32
 
   # The Job class encapsulates a Windows Job object.
   class Job
-    include Windows::Error
-    include Windows::Process
-    include Windows::Security
-    include Windows::Handle
-
-    # Error typically raised if any Job methods fail.
-    class Error < StandardError; end
+    include Windows::Constants
+    include Windows::Functions
+    include Windows::Structs
 
     # The version of the win32-job library
     VERSION = '0.1.0'
@@ -42,7 +36,7 @@ module Win32
 
     public
 
-    attr_reader :process_list
+    #attr_reader :process_list
     attr_reader :job_name
 
     alias :name :job_name
@@ -57,12 +51,14 @@ module Win32
     def initialize(name = nil, security = nil)
       raise TypeError unless name.is_a?(String) if name
 
-      @job_name     = name
+      @job_name = name
       @process_list = []
 
-      @job_handle = CreateJobObject(nil, name)
+      @job_handle = CreateJobObject(security, name)
 
-      raise Error, get_last_error if @job_handle == 0
+      if @job_handle == 0
+        raise SystemCallError.new('CreateJobObject', FFI.errno)
+      end
 
       if block_given?
         begin
@@ -77,20 +73,26 @@ module Win32
     # job are tracked via the Job#process_list accessor.
     #
     def add_process(pid)
-      phandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pid)
+      phandle = OpenProcess(PROCESS_ALL_ACCESS, false, pid)
 
-      raise Error, get_last_error if phandle == 0
+      if phandle == 0
+        raise SystemCallError.new('OpenProcess', FFI.errno)
+      end
 
-      pbool = 0.chr * 4
-      IsProcessInJob(phandle, nil, pbool)
+      pbool = FFI::MemoryPointer.new(:int)
 
-      if pbool.unpack('L').first == 0
+      IsProcessInJob(phandle, 0, pbool)
+
+      if pbool.read_int == 0
         unless AssignProcessToJobObject(@job_handle, phandle)
-          raise Error, get_last_error
+          error = FFI.errno
+          close
+          raise SystemCallError.new('AssignProcessToJobObject', error)
         end
         @process_list << pid
       else
-        raise Error, "pid #{pid} is already part of a job"
+        close
+        raise ArgumentError, "pid #{pid} is already part of a job"
       end
 
       pid
@@ -99,15 +101,15 @@ module Win32
     # Close the job object.
     #
     def close
-      CloseHandle(@job_handle)
+      CloseHandle(@job_handle) if @job_handle
     end
 
-    # Kill all processes associated with the job object associated with
-    # the current process.
+    # Kill all processes associated with the job object that is
+    # associated with the current process.
     #
     def kill
       if TerminateJobObject(@job_handle, Process.pid) == 0
-        raise Error, get_last_error
+        raise SystemCallError.new('TerminateJobObject', FFI.errno)
       end
     end
 
@@ -137,7 +139,7 @@ module Win32
       end
 
       options.each{ |key, value|
-        key = key.to_s.downcase 
+        key = key.to_s.downcase
         unless VALID_OPTIONS.include?(key)
           raise ArgumentError, "invalid option '#{key}'"
         end
@@ -155,23 +157,39 @@ module Win32
       end
     end
 
-=begin
     def process_list
+      info = JOBOBJECT_BASIC_PROCESS_ID_LIST.new
+
       bool = QueryInformationJobObject(
         @job_handle,
         JobObjectBasicProcessIdList,
+        info,
+        info.size,
+        nil
       )
+
+      unless bool
+        error = FFI.errno
+        close
+        raise SystemCallError.new('QueryInformationJobObject', error)
+      end
+
+      p info[:NumberOfAssignedProcesses]
+      #p info[:ProcessIdList]
     end
-=end
   end
 end
 
-include Win32
-j = Job.new('test')
-#j.kill
-#Job.new.kill
-
-p j.process_list
-j.add_process(Process.pid)
-p j.process_list
-j.close
+if $0 == __FILE__
+  include Win32
+  j = Job.new('test')
+  j.process_list
+  pid1 = Process.spawn("notepad.exe")
+  pid2 = Process.spawn("notepad.exe")
+  p pid1
+  p pid2
+  j.add_process(pid1)
+  j.add_process(pid2)
+  j.process_list
+  j.close
+end
