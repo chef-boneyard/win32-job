@@ -6,6 +6,7 @@ module Windows
       layout(
         :NumberOfAssignedProcesses, :ulong,
         :NumberOfProcessIdsInList, :ulong,
+        #:ProcessIdList, [:uintptr_t, 1]
         :ProcessIdList, :pointer
       )
     end
