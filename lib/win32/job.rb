@@ -113,7 +113,7 @@ module Win32
       proc{ CloseHandle(handle) unless closed }
     end
 
-    # Kill all processes associated with the job object that is
+    # Kill all processes associated with the job object that are
     # associated with the current process.
     #
     def kill
@@ -185,6 +185,41 @@ module Win32
 
       info[:ProcessIdList].to_a.select{ |n| n != 0 }
     end
+
+    # Returns
+    def account_info
+      info = JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION.new
+
+      bool = QueryInformationJobObject(
+        @job_handle,
+        JobObjectBasicProcessIdList,
+        info,
+        info.size,
+        nil
+      )
+
+      unless bool
+        raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
+      end
+
+      struct = AccountInfo.new
+      struct[:total_user_time] = info[:BasicInfo][:TotalUserTime]
+      struct[:total_kernel_time] = info[:BasicInfo][:TotalKernelTime]
+      struct[:this_period_total_user_time] = info[:BasicInfo][:ThisPeriodTotalUserTime]
+      struct[:this_period_total_kernel_time] = info[:BasicInfo][:ThisPeriodTotalKernelTime]
+      struct[:total_page_fault_count] = info[:BasicInfo][:TotalPageFaultCount]
+      struct[:total_processes] = info[:BasicInfo][:TotalProcesses]
+      struct[:active_processes] = info[:BasicInfo][:ActiveProcesses]
+      struct[:total_terminated_processes] = info[:BasicInfo][:TotalTerminatedProcesses]
+      struct[:read_operation_count] = info[:IoInfo][:ReadOperationCount]
+      struct[:write_operation_count] = info[:IoInfo][:WriteOperationCount]
+      struct[:other_operation_count] = info[:IoInfo][:OtherOperationCount]
+      struct[:read_transfer_count] = info[:IoInfo][:ReadTransferCount]
+      struct[:write_transfer_count] = info[:IoInfo][:WriteTransferCount]
+      struct[:other_transfer_count] = info[:IoInfo][:OtherTransferCount]
+
+      struct
+    end
   end
 end
 
@@ -199,5 +234,9 @@ if $0 == __FILE__
   j.add_process(pid1)
   j.add_process(pid2)
   p j.process_list
+  sleep 10
+  p j.account_info
+  sleep 10
+  p j.account_info
   j.close
 end
