@@ -13,5 +13,7 @@ module Windows
     JobObjectLimitViolationInformation = 13
     JobObjectGroupInformationEx = 14
     JobObjectCpuRateControlInformation = 15
+
+    PROCESS_ALL_ACCESS = 0x1F0FFF
   end
 end
