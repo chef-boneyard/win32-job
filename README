@@ -1,5 +1,5 @@
 = Description
-  A Ruby interface to Windows Jobs.
+  A Ruby interface to Windows' jobs, process groups for Windows.
 
 = Synopsis
   require 'win32/job'
