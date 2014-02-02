@@ -63,6 +63,14 @@ module Windows
       )
     end
 
+    class SECURITY_ATTRIBUTES < FFI::Struct
+      layout(
+        :nLength, :dword,
+        :lpSecurityDescriptor, :pointer,
+        :bInheritHandle, :bool
+      )
+    end
+
     # Ruby Structs
 
     AccountInfo = Struct.new('AccountInfo',
