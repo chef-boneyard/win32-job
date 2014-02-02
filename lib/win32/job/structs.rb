@@ -2,6 +2,10 @@ require 'ffi'
 
 module Windows
   module Structs
+    class LARGE_INTEGER < FFI::Union
+      layout(:QuadPart, :long_long)
+    end
+
     class JOBOBJECT_BASIC_PROCESS_ID_LIST < FFI::Struct
       layout(
         :NumberOfAssignedProcesses, :ulong,
@@ -12,10 +16,10 @@ module Windows
 
     class JOBOBJECT_BASIC_ACCOUNTING_INFORMATION < FFI::Struct
       layout(
-        :TotalUserTime, :uintptr_t,
-        :TotalKernelTime, :uintptr_t,
-        :ThisPeriodTotalUserTime, :uintptr_t,
-        :ThisPeriodTotalKernelTime, :uintptr_t,
+        :TotalUserTime, LARGE_INTEGER,
+        :TotalKernelTime, LARGE_INTEGER,
+        :ThisPeriodTotalUserTime, LARGE_INTEGER,
+        :ThisPeriodTotalKernelTime, LARGE_INTEGER,
         :TotalPageFaultCount, :ulong,
         :TotalProcesses, :ulong,
         :ActiveProcesses, :ulong,
@@ -35,13 +39,16 @@ module Windows
     end
 
     class JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION < FFI::Struct
-      layout(:BasicInfo, JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, :IoInfo, IO_COUNTERS)
+      layout(
+        :BasicInfo, JOBOBJECT_BASIC_ACCOUNTING_INFORMATION,
+        :IoInfo, IO_COUNTERS
+      )
     end
 
     class JOBOBJECT_BASIC_LIMIT_INFORMATION < FFI::Struct
       layout(
-        :PerProcessUserTimeLimit, :uintptr_t,
-        :PerJobUserTimeLimit, :uintptr_t,
+        :PerProcessUserTimeLimit, LARGE_INTEGER,
+        :PerJobUserTimeLimit, LARGE_INTEGER,
         :LimitFlags, :ulong,
         :MinimumWorkingSetSize, :size_t,
         :MaximumWorkingSetSize, :size_t,
@@ -65,7 +72,7 @@ module Windows
 
     class SECURITY_ATTRIBUTES < FFI::Struct
       layout(
-        :nLength, :dword,
+        :nLength, :ulong,
         :lpSecurityDescriptor, :pointer,
         :bInheritHandle, :bool
       )
