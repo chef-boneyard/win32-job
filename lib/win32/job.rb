@@ -278,6 +278,7 @@ module Win32
 
       if options[:process_memory]
         flags |= JOB_OBJECT_LIMIT_PROCESS_MEMORY
+        struct[:ProcessMemoryLimit] = options[:process_memory]
       end
 
       if options[:process_time]
