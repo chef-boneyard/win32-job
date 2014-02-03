@@ -119,9 +119,6 @@ module Win32
       end
     end
 
-    def self.finalize(handle, closed)
-      proc{ CloseHandle(handle) unless closed }
-    end
 
     # Kill all processes associated with the job object that are
     # associated with the current process.
@@ -369,7 +366,10 @@ module Win32
       info[:ProcessIdList].to_a.select{ |n| n != 0 }
     end
 
-    # Returns
+    # Returns an AccountInfoStruct that shows various job accounting
+    # information, such as total user time, total kernel time, the
+    # total number of processes, and so on.
+    #
     def account_info
       info = JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION.new
 
@@ -445,6 +445,14 @@ module Win32
       )
 
       struct
+    end
+
+    private
+
+    # Automatically close job object when it goes out of scope.
+    #
+    def self.finalize(handle, closed)
+      proc{ CloseHandle(handle) unless closed }
     end
   end
 end
