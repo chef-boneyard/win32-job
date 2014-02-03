@@ -1,7 +1,10 @@
-require 'rubygems'
-gem 'test-unit'
-
-require 'test/unit'
+#######################################################################
+# test_win32_job.rb
+#
+# Test suite for the win32-job library. You should run these tests
+# via the "rake test" command.
+#######################################################################
+require 'test-unit'
 require 'win32/job'
 
 class TC_Win32_Job < Test::Unit::TestCase
@@ -13,7 +16,7 @@ class TC_Win32_Job < Test::Unit::TestCase
   test "version number is what we expect" do
     assert_equal('0.1.0', Win32::Job::VERSION)
   end
-  
+
   test "constructor argument may be omitted" do
     assert_nothing_raised{ Win32::Job.new }
   end
