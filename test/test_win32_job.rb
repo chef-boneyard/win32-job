@@ -90,6 +90,15 @@ class TC_Win32_Job < Test::Unit::TestCase
     assert_raise(ArgumentError){ @job.configure_limit(:bogus => 1) }
   end
 
+  test "priority constants are defined" do
+    assert_not_nil(Win32::Job::ABOVE_NORMAL_PRIORITY_CLASS)
+    assert_not_nil(Win32::Job::BELOW_NORMAL_PRIORITY_CLASS)
+    assert_not_nil(Win32::Job::HIGH_PRIORITY_CLASS)
+    assert_not_nil(Win32::Job::IDLE_PRIORITY_CLASS)
+    assert_not_nil(Win32::Job::NORMAL_PRIORITY_CLASS)
+    assert_not_nil(Win32::Job::REALTIME_PRIORITY_CLASS)
+  end
+
   def teardown
     @name = nil
 
