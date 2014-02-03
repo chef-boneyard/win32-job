@@ -1,17 +1,19 @@
 require 'rake'
+require 'rake/clean'
 require 'rake/testtask'
-require 'rbconfig'
-include Config
 
-task :clean do
-  Dir['*.gem'].each{ |f| File.delete(f) }
-end
+CLEAN.include("**/*.gem", "**/*.rbc", "**/*.rbx")
 
 namespace :gem do
   desc 'Create the win32-job gem'
   task :create do
     spec = eval(IO.read('win32-job.gemspec'))
-    Gem::Builder.new(spec).build
+    if Gem::VERSION < "2.0"
+      Gem::Builder.new(spec).build
+    else
+      require 'rubygems/package'
+      Gem::Package.build(spec)
+    end
   end
 
   desc 'Install the win32-job gem'
