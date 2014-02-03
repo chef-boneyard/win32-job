@@ -10,7 +10,8 @@ require 'win32/job'
 class TC_Win32_Job < Test::Unit::TestCase
   def setup
     @name = 'ruby_xxxxxx'
-    @job  = Win32::Job.new(@name)
+    @job = Win32::Job.new(@name)
+    @pid = Process.spawn('notepad')
   end
 
   test "version number is what we expect" do
@@ -54,8 +55,48 @@ class TC_Win32_Job < Test::Unit::TestCase
     assert_nothing_raised{ @job.close }
   end
 
+  test "close method does not accept any arguments" do
+    assert_raise(ArgumentError){ @job.close(1) }
+  end
+
+  test "add_process basic functionality" do
+    assert_respond_to(@job, :add_process)
+  end
+
+  test "add_process works as expected" do
+    assert_nothing_raised{ @job.add_process(@pid) }
+  end
+
+  test "add process requires a single argument" do
+    assert_raise(ArgumentError){ @job.add_process }
+  end
+
+  test "configure_limit basic functionality" do
+    assert_nothing_raised{ @job.configure_limit }
+  end
+
+  test "configure_limit works as expected" do
+    assert_nothing_raised{
+      @job.configure_limit(
+        :breakaway_ok      => true,
+        :kill_on_job_close => true,
+        :process_memory    => 1024 * 8,
+        :process_time      => 1000
+      )
+    }
+  end
+
+  test "configure_limit raises an error if it detects an invalid option" do
+    assert_raise(ArgumentError){ @job.configure_limit(:bogus => 1) }
+  end
+
   def teardown
     @name = nil
-    @job  = nil
+
+    @job.close
+    @job = nil
+
+    Process.kill(9, @pid)
+    @pid = nil
   end
 end
