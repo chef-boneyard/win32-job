@@ -1,5 +1,7 @@
 module Windows
   module Constants
+    private
+
     JobObjectBasicAccountingInformation = 1
     JobObjectBasicLimitInformation = 2
     JobObjectBasicProcessIdList = 3
@@ -31,6 +33,8 @@ module Windows
     JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK = 0x00001000
     JOB_OBJECT_LIMIT_SUBSET_AFFINITY = 0x00004000
     JOB_OBJECT_LIMIT_WORKINGSET = 0x00000001
+
+    public
 
     ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
     BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
