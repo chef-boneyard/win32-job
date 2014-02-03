@@ -217,10 +217,10 @@ module Win32
       end
 
       struct = AccountInfo.new(
-        info[:BasicInfo][:TotalUserTime],
-        info[:BasicInfo][:TotalKernelTime],
-        info[:BasicInfo][:ThisPeriodTotalUserTime],
-        info[:BasicInfo][:ThisPeriodTotalKernelTime],
+        info[:BasicInfo][:TotalUserTime][:QuadPart],
+        info[:BasicInfo][:TotalKernelTime][:QuadPart],
+        info[:BasicInfo][:ThisPeriodTotalUserTime][:QuadPart],
+        info[:BasicInfo][:ThisPeriodTotalKernelTime][:QuadPart],
         info[:BasicInfo][:TotalPageFaultCount],
         info[:BasicInfo][:TotalProcesses],
         info[:BasicInfo][:ActiveProcesses],
@@ -254,8 +254,8 @@ module Win32
       end
 
       struct = LimitInfo.new(
-        info[:BasicLimitInformation][:PerProcessUserTimeLimit],
-        info[:BasicLimitInformation][:PerJobUserTimeLimit],
+        info[:BasicLimitInformation][:PerProcessUserTimeLimit][:QuadPart],
+        info[:BasicLimitInformation][:PerJobUserTimeLimit][:QuadPart],
         info[:BasicLimitInformation][:LimitFlags],
         info[:BasicLimitInformation][:MinimumWorkingSetSize],
         info[:BasicLimitInformation][:MaximumWorkingSetSize],
