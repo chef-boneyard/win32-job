@@ -26,6 +26,8 @@ module Win32
       job_memory
       job_time
       kill_on_job_close
+      limit_job_time
+      limit_affinity
       preserve_job_time
       priority_class
       process_memory
@@ -124,6 +126,18 @@ module Win32
 
     # Set various job limits. Possible options are:
     #
+    # * per_process_user_time_limit
+    # * per_job_user_time_limit
+    # * limit_flags
+    # * minimum_working_set_size
+    # * maximum_working_set_size
+    # * active_process_limit
+    # * affinity
+    # * priority_class
+    # * scheduling_class
+    #
+    # Possible options for :limit_flags are:
+    #
     # * active_process
     # * affinity
     # * breakaway_ok
@@ -131,38 +145,38 @@ module Win32
     # * job_memory
     # * job_time
     # * kill_on_job_close
+    # * limit_affinity
+    # * limit_job_time
     # * preserve_job_time
     # * priority_class
     # * process_memory
     # * process_time
     # * scheduling_class
+    # * subset_affinity
     # * silent_breakaway_ok
     # * workingset
+    #
+    # Note that
     #--
     # The options are based on the LimitFlags of the
     # JOBOBJECT_BASIC_LIMIT_INFORMATION struct.
     #
-    def configure(options = {})
+    def configure_limit(options = {})
       unless options.is_a?(Hash)
         raise TypeError, "argument to configure must be a hash"
       end
 
-      options.each{ |key, value|
-        key = key.to_s.downcase
-        unless VALID_OPTIONS.include?(key)
-          raise ArgumentError, "invalid option '#{key}'"
-        end
-        options[key.to_sym] = value
-      }
+      flags = 0
+      struct = JOBOBJECT_EXTENDED_LIMIT_INFORMATION.new
 
-      job_struct = 0.chr * 44
-
-      if options[:process_time]
-        job_struct[0, 8] = [options[:process_time]].pack('L')
+      if options[:active_process]
+        flags |= JOB_OBJECT_LIMIT_ACTIVE_PROCESS
+        struct[:ActiveProcessLimit] = options[:active_process]
       end
 
-      if options[:job_time]
-        job_struct[0, 8] = [options[:process_time]].pack('L')
+      if options[:affinity]
+        flags |= JOB_OBJECT_LIMIT_AFFINITY
+        struct[:Affinity] = options[:affinity]
       end
     end
 
