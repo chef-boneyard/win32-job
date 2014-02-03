@@ -112,6 +112,13 @@ module Win32
       @closed = true
     end
 
+    # Terminate all processes currently associated with the job.
+    def terminate
+      unless TerminateJobObject(@job_handle, 0)
+        raise SystemCallError.new('TerminateJobObject', FFI.errno)
+      end
+    end
+
     def self.finalize(handle, closed)
       proc{ CloseHandle(handle) unless closed }
     end
@@ -450,17 +457,19 @@ if $0 == __FILE__
   pid2 = Process.spawn("notepad.exe")
   sleep 1
 
-  j.configure_limit(
-    :breakaway_ok      => true,
-    :kill_on_job_close => true,
-    :process_memory    => 1024 * 8,
-    :process_time      => 1000
-  )
+  #j.configure_limit(
+  #  :breakaway_ok      => true,
+  #  :kill_on_job_close => true,
+  #  :process_memory    => 1024 * 8,
+  #  :process_time      => 1000
+  #)
 
   j.add_process(pid1)
   j.add_process(pid2)
 
   sleep 5
+
+  j.terminate
 
   j.close
 end
