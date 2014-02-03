@@ -242,7 +242,7 @@ module Win32
 
       if options[:affinity]
         flags |= JOB_OBJECT_LIMIT_AFFINITY
-        struct[:BasicInformation][:Affinity] = options[:affinity]
+        struct[:BasicLimitInformation][:Affinity] = options[:affinity]
       end
 
       if options[:breakaway_ok]
@@ -260,7 +260,7 @@ module Win32
 
       if options[:per_job_user_time_limit]
         flags |= JOB_OBJECT_LIMIT_JOB_TIME
-        struct[:BasicInformation][:PerJobUserTimeLimit] = options[:per_job_user_time_limit]
+        struct[:BasicLimitInformation][:PerJobUserTimeLimit][:QuadPart] = options[:per_job_user_time_limit]
       end
 
       if options[:kill_on_job_close]
@@ -273,7 +273,7 @@ module Win32
 
       if options[:priority_class]
         flags |= JOB_OBJECT_LIMIT_PRIORITY_CLASS
-        struct[:BasicInformation][:PriorityClass] = options[:priority_class]
+        struct[:BasicLimitInformation][:PriorityClass] = options[:priority_class]
       end
 
       if options[:process_memory]
@@ -283,12 +283,12 @@ module Win32
 
       if options[:process_time]
         flags |= JOB_OBJECT_LIMIT_PROCESS_TIME
-        struct[:BasicInformation][:PerProcessUserTimeLimit] = options[:process_time]
+        struct[:BasicLimitInformation][:PerProcessUserTimeLimit][:QuadPart] = options[:process_time]
       end
 
       if options[:scheduling_class]
         flags |= JOB_OBJECT_LIMIT_SCHEDULING_CLASS
-        struct[:BasicInformation][:SchedulingClass] = options[:scheduling_class]
+        struct[:BasicLimitInformation][:SchedulingClass] = options[:scheduling_class]
       end
 
       if options[:silent_breakaway_ok]
@@ -301,15 +301,15 @@ module Win32
 
       if options[:minimum_working_set]
         flags |= JOB_OBJECT_LIMIT_WORKINGSET
-        struct[:BasicInformation][:MinimumWorkingSetSize] = options[:minimum_working_set]
+        struct[:BasicLimitInformation][:MinimumWorkingSetSize] = options[:minimum_working_set]
       end
 
       if options[:maximum_working_set]
         flags |= JOB_OBJECT_LIMIT_WORKINGSET
-        struct[:BasicInformation][:MaximumWorkingSetSize] = options[:maximum_working_set]
+        struct[:BasicLimitInformation][:MaximumWorkingSetSize] = options[:maximum_working_set]
       end
 
-      struct[:BasicInformation][:LimitFlags] = flags
+      struct[:BasicLimitInformation][:LimitFlags] = flags
 
       bool = SetInformationJobObject(
         @job_handle,
@@ -431,16 +431,11 @@ if $0 == __FILE__
   j.process_list
   pid1 = Process.spawn("notepad.exe")
   pid2 = Process.spawn("notepad.exe")
-  #p pid1
-  #p pid2
   j.add_process(pid1)
   j.add_process(pid2)
-  p j.process_list
-  sleep 10
-  p j.account_info
-  sleep 10
-  p j.account_info
+  sleep 2
   p j.limit_info
-  sleep 5
+  j.configure_limit(:process_time => 1000, :process_memory => 1000)
+  p j.limit_info
   j.close
 end
