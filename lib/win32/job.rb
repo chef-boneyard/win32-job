@@ -450,18 +450,15 @@ if $0 == __FILE__
   pid2 = Process.spawn("notepad.exe")
   sleep 1
 
-  j.add_process(pid1)
-  j.add_process(pid2)
-
   j.configure_limit(
     :breakaway_ok      => true,
-    :kill_on_job_closs => true
-    #:process_memory    => 1024 * 8,
-    #:process_time      => 1000
+    :kill_on_job_close => true,
+    :process_memory    => 1024 * 8,
+    :process_time      => 1000
   )
 
-  #j.add_process(pid1)
-  #j.add_process(pid2)
+  j.add_process(pid1)
+  j.add_process(pid2)
 
   sleep 5
 
