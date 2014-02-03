@@ -138,25 +138,91 @@ module Win32
     #
     # Possible options for :limit_flags are:
     #
-    # * active_process
-    # * affinity
-    # * breakaway_ok
-    # * die_on_unhandled_exception
-    # * job_memory
-    # * job_time
-    # * kill_on_job_close
-    # * limit_affinity
-    # * limit_job_time
-    # * preserve_job_time
-    # * priority_class
-    # * process_memory
-    # * process_time
-    # * scheduling_class
-    # * subset_affinity
-    # * silent_breakaway_ok
-    # * workingset
+    # * active_process => Numeric
+    #     Establishes a maximum number of simultaneously active processes
+    #     associated with the job.
     #
-    # Note that
+    # * affinity => Numeric
+    #     Causes all processes associated with the job to use the same
+    #     processor affinity.
+    #
+    # * breakaway_ok => Boolean
+    #     If any process associated with the job creates a child process using
+    #     the CREATE_BREAKAWAY_FROM_JOB flag while this limit is in effect, the
+    #     child process is not associated with the job.
+    #
+    # * die_on_unhandled_exception => Boolean
+    #     Forces a call to the SetErrorMode function with the SEM_NOGPFAULTERRORBOX
+    #     flag for each process associated with the job. If an exception occurs
+    #     and the system calls the UnhandledExceptionFilter function, the debugger
+    #     will be given a chance to act. If there is no debugger, the functions
+    #     returns EXCEPTION_EXECUTE_HANDLER. Normally, this will cause termination
+    #     of the process with the exception code as the exit status.
+    #
+    # * job_memory => Numeric
+    #     Causes all processes associated with the job to limit the job-wide
+    #     sum of their committed memory. When a process attempts to commit
+    #     memory that would exceed the job-wide limit, it fails. If the job
+    #     object is associated with a completion port, a
+    #     JOB_OBJECT_MSG_JOB_MEMORY_LIMIT message is sent to the completion
+    #     port.
+    #
+    # * job_time => Numeric
+    #     Establishes a user-mode execution time limit for the job.
+    #
+    # * kill_on_job_close => Boolean
+    #     Causes all processes associated with the job to terminate when the
+    #     last handle to the job is closed.
+    #
+    # * minimum_working_set => Numeric
+    #     Causes all processes associated with the job to use the same minimum
+    #     set size. If the job is nested, the effective working set size is the
+    #     smallest working set size in the job chain.
+    #
+    # * maximum_working_set => Numeric
+    #     Causes all processes associated with the job to use the same maximum
+    #     set size. If the job is nested, the effective working set size is the
+    #     smallest working set size in the job chain.
+    #
+    # * preserve_job_time => Boolean
+    #     Preserves any job time limits you previously set. As long as this flag
+    #     is set, you can establish a per-job time limit once, then alter other
+    #     limits in subsequent calls. This flag cannot be used with job_time.
+    #
+    # * priority_class => Numeric
+    #     Causes all processes associated with the job to use the same priority
+    #     class, e.g. ABOVE_NORMAL_PRIORITY_CLASS.
+    #
+    # * process_memory => Numeric
+    #     Causes all processes associated with the job to limit their committed
+    #     memory. When a process attempts to commit memory that would exceed
+    #     the per-process limit, it fails. If the job object is associated with
+    #     a completion port, a JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT message is
+    #     sent to the completion port. If the job is nested, the effective
+    #     memory limit is the most restrictive memory limit in the job chain.
+    #
+    # * process_time => Numeric
+    #     Establishes a user-mode execution time limit for each currently
+    #     active process and for all future processes associated with the job.
+    #
+    # * scheduling_class => Numeric
+    #     Causes all processes in the job to use the same scheduling class. If
+    #     the job is nested, the effective scheduling class is the lowest
+    #     scheduling class in the job chain.
+    #
+    # * silent_breakaway_ok => Boolean
+    #     Allows any process associated with the job to create child processes
+    #     that are not associated with the job. If the job is nested and its
+    #     immediate job object allows breakaway, the child process breaks away
+    #     from the immediate job object and from each job in the parent job chain,
+    #     moving up the hierarchy until it reaches a job that does not permit
+    #     breakaway. If the immediate job object does not allow breakaway, the
+    #     child process does not break away even if jobs in its parent job
+    #     chain allow it.
+    #
+    # * subset_affinity => Numeric
+    #     Allows processes to use a subset of the processor affinity for all
+    #     processes associated with the job.
     #--
     # The options are based on the LimitFlags of the
     # JOBOBJECT_BASIC_LIMIT_INFORMATION struct.
@@ -166,18 +232,96 @@ module Win32
         raise TypeError, "argument to configure must be a hash"
       end
 
-      flags = 0
+      flags  = 0
       struct = JOBOBJECT_EXTENDED_LIMIT_INFORMATION.new
 
       if options[:active_process]
         flags |= JOB_OBJECT_LIMIT_ACTIVE_PROCESS
-        struct[:ActiveProcessLimit] = options[:active_process]
+        struct[:BasicInformatin][:ActiveProcessLimit] = options[:active_process]
       end
 
       if options[:affinity]
         flags |= JOB_OBJECT_LIMIT_AFFINITY
-        struct[:Affinity] = options[:affinity]
+        struct[:BasicInformation][:Affinity] = options[:affinity]
       end
+
+      if options[:breakaway_ok]
+        flags |= JOB_OBJECT_LIMIT_BREAKAWAY_OK
+      end
+
+      if options[:die_on_unhandled_exception]
+        flags |= JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION
+      end
+
+      if options[:job_memory]
+        flags |= JOB_OBJECT_LIMIT_JOB_MEMORY
+        struct[:JobMemoryLimit] = options[:job_memory]
+      end
+
+      if options[:per_job_user_time_limit]
+        flags |= JOB_OBJECT_LIMIT_JOB_TIME
+        struct[:BasicInformation][:PerJobUserTimeLimit] = options[:per_job_user_time_limit]
+      end
+
+      if options[:kill_on_job_close]
+        flags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+      end
+
+      if options[:preserve_job_time]
+        flags |= JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME
+      end
+
+      if options[:priority_class]
+        flags |= JOB_OBJECT_LIMIT_PRIORITY_CLASS
+        struct[:BasicInformation][:PriorityClass] = options[:priority_class]
+      end
+
+      if options[:process_memory]
+        flags |= JOB_OBJECT_LIMIT_PROCESS_MEMORY
+      end
+
+      if options[:process_time]
+        flags |= JOB_OBJECT_LIMIT_PROCESS_TIME
+        struct[:BasicInformation][:PerProcessUserTimeLimit] = options[:process_time]
+      end
+
+      if options[:scheduling_class]
+        flags |= JOB_OBJECT_LIMIT_SCHEDULING_CLASS
+        struct[:BasicInformation][:SchedulingClass] = options[:scheduling_class]
+      end
+
+      if options[:silent_breakaway_ok]
+        flags |= JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
+      end
+
+      if options[:subset_affinity]
+        flags |= JOB_OBJECT_LIMIT_SUBSET_AFFINITY | JOB_OBJECT_LIMIT_AFFINITY
+      end
+
+      if options[:minimum_working_set]
+        flags |= JOB_OBJECT_LIMIT_WORKINGSET
+        struct[:BasicInformation][:MinimumWorkingSetSize] = options[:minimum_working_set]
+      end
+
+      if options[:maximum_working_set]
+        flags |= JOB_OBJECT_LIMIT_WORKINGSET
+        struct[:BasicInformation][:MaximumWorkingSetSize] = options[:maximum_working_set]
+      end
+
+      struct[:BasicInformation][:LimitFlags] = flags
+
+      bool = SetInformationJobObject(
+        @job_handle,
+        JobObjectExtendedLimitInformation,
+        struct,
+        struct.size
+      )
+
+      unless bool
+        raise SystemCallError.new('SetInformationJobObject', FFI.errno)
+      end
+
+      options
     end
 
     # Return a list of process ids that are part of the job.
