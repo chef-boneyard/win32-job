@@ -28,13 +28,14 @@ module Win32
       kill_on_job_close
       limit_job_time
       limit_affinity
+      minimum_working_set
+      maximum_working_set
       preserve_job_time
       priority_class
       process_memory
       process_time
       scheduling_class
       silent_breakaway_ok
-      workingset
     ]
 
     public
@@ -126,18 +127,6 @@ module Win32
 
     # Set various job limits. Possible options are:
     #
-    # * per_process_user_time_limit
-    # * per_job_user_time_limit
-    # * limit_flags
-    # * minimum_working_set_size
-    # * maximum_working_set_size
-    # * active_process_limit
-    # * affinity
-    # * priority_class
-    # * scheduling_class
-    #
-    # Possible options for :limit_flags are:
-    #
     # * active_process => Numeric
     #     Establishes a maximum number of simultaneously active processes
     #     associated with the job.
@@ -174,15 +163,36 @@ module Win32
     #     Causes all processes associated with the job to terminate when the
     #     last handle to the job is closed.
     #
-    # * minimum_working_set => Numeric
+    # * minimum_working_set_size => Numeric
     #     Causes all processes associated with the job to use the same minimum
     #     set size. If the job is nested, the effective working set size is the
     #     smallest working set size in the job chain.
     #
-    # * maximum_working_set => Numeric
+    # * maximum_working_set_size => Numeric
     #     Causes all processes associated with the job to use the same maximum
     #     set size. If the job is nested, the effective working set size is the
     #     smallest working set size in the job chain.
+    #
+    # * per_job_user_time_limit
+    #     The per-job user-mode execution time limit, in 100-nanosecond ticks.
+    #     The system adds the current time of the processes associated with the
+    #     job to this limit.
+    #
+    #     For example, if you set this limit to 1 minute, and the job has a
+    #     process that has accumulated 5 minutes of user-mode time, the limit
+    #     actually enforced is 6 minutes.
+    #
+    #     The system periodically checks to determine whether the sum of the
+    #     user-mode execution time for all processes is greater than this
+    #     end-of-job limit. If so all processes are terminated.
+    #
+    # * per_process_user_time_limit
+    #     The per-process user-mode execution time limit, in 100-nanosecond
+    #     ticks. The system periodically checks to determine whether each
+    #     process associated with the job has accumulated more user-mode time
+    #     than the set limit. If it has, the process is terminated.
+    #     If the job is nested, the effective limit is the most restrictive
+    #     limit in the job chain.
     #
     # * preserve_job_time => Boolean
     #     Preserves any job time limits you previously set. As long as this flag
@@ -231,6 +241,13 @@ module Win32
       unless options.is_a?(Hash)
         raise TypeError, "argument to configure must be a hash"
       end
+
+      # Validate options
+      options.each{ |key,value|
+        unless VALID_OPTIONS.include?(key.to_s.downcase)
+          raise ArgumentError, "invalid option '#{key}'"
+        end
+      }
 
       flags  = 0
       struct = JOBOBJECT_EXTENDED_LIMIT_INFORMATION.new
@@ -299,14 +316,14 @@ module Win32
         flags |= JOB_OBJECT_LIMIT_SUBSET_AFFINITY | JOB_OBJECT_LIMIT_AFFINITY
       end
 
-      if options[:minimum_working_set]
+      if options[:minimum_working_set_size]
         flags |= JOB_OBJECT_LIMIT_WORKINGSET
-        struct[:BasicLimitInformation][:MinimumWorkingSetSize] = options[:minimum_working_set]
+        struct[:BasicLimitInformation][:MinimumWorkingSetSize] = options[:minimum_working_set_size]
       end
 
-      if options[:maximum_working_set]
+      if options[:maximum_working_set_size]
         flags |= JOB_OBJECT_LIMIT_WORKINGSET
-        struct[:BasicLimitInformation][:MaximumWorkingSetSize] = options[:maximum_working_set]
+        struct[:BasicLimitInformation][:MaximumWorkingSetSize] = options[:maximum_working_set_size]
       end
 
       struct[:BasicLimitInformation][:LimitFlags] = flags
@@ -428,14 +445,25 @@ end
 if $0 == __FILE__
   include Win32
   j = Job.new('test')
-  j.process_list
+
   pid1 = Process.spawn("notepad.exe")
   pid2 = Process.spawn("notepad.exe")
+  sleep 1
+
   j.add_process(pid1)
   j.add_process(pid2)
-  sleep 2
-  p j.limit_info
-  j.configure_limit(:process_time => 1000, :process_memory => 1000)
-  p j.limit_info
+
+  j.configure_limit(
+    :breakaway_ok      => true,
+    :kill_on_job_closs => true
+    #:process_memory    => 1024 * 8,
+    #:process_time      => 1000
+  )
+
+  #j.add_process(pid1)
+  #j.add_process(pid2)
+
+  sleep 5
+
   j.close
 end
