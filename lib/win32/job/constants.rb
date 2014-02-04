@@ -1,3 +1,5 @@
+require 'ffi'
+
 module Windows
   module Constants
     private
@@ -8,6 +10,7 @@ module Windows
     JobObjectBasicUIRestrictions = 4
     JobObjectSecurityLimitInformation = 5
     JobObjectEndOfJobTimeInformation = 6
+    JobObjectAssociateCompletionPortInformation = 7
     JobObjectBasicAndIoAccountingInformation = 8
     JobObjectExtendedLimitInformation = 9
     JobObjectGroupInformation = 11
@@ -17,8 +20,11 @@ module Windows
     JobObjectCpuRateControlInformation = 15
 
     PROCESS_ALL_ACCESS = 0x1F0FFF
+    SYNCHRONIZE = 0x00100000
 
     INFINITE = 0xFFFFFFFF
+
+    INVALID_HANDLE_VALUE = FFI::Pointer.new(-1).address
 
     JOB_OBJECT_LIMIT_ACTIVE_PROCESS = 0x00000008
     JOB_OBJECT_LIMIT_AFFINITY = 0x00000010
@@ -35,6 +41,8 @@ module Windows
     JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK = 0x00001000
     JOB_OBJECT_LIMIT_SUBSET_AFFINITY = 0x00004000
     JOB_OBJECT_LIMIT_WORKINGSET = 0x00000001
+
+    JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO = 4
 
     WAIT_ABANDONED     = 0x00000080
     WAIT_IO_COMPLETION = 0x000000C0
