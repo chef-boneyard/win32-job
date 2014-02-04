@@ -15,6 +15,7 @@ module Windows
     attach_function :GetQueuedCompletionStatus, [:handle, :pointer, :pointer, :pointer, :dword], :bool
     attach_function :IsProcessInJob, [:handle, :handle, :pointer], :bool
     attach_function :OpenProcess, [:dword, :bool, :dword], :handle
+    attach_function :OpenJobObject, :OpenJobObjectA, [:dword, :bool, :string], :handle
     attach_function :QueryInformationJobObject, [:handle, :int, :pointer, :dword, :pointer], :bool
     attach_function :ResumeThread, [:handle], :dword
     attach_function :SetInformationJobObject, [:handle, :int, :pointer, :dword], :bool
