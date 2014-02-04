@@ -507,28 +507,3 @@ module Win32
     end
   end
 end
-
-if $0 == __FILE__
-  include Win32
-  j = Job.new('test')
-
-  pid1 = Process.spawn("notepad.exe")
-  pid2 = Process.spawn("notepad.exe")
-  sleep 1
-
-  j.configure_limit(
-    :breakaway_ok      => true,
-    :kill_on_job_close => true,
-    :process_memory    => 1024 * 8,
-    :process_time      => 1000
-  )
-
-  j.add_process(pid1)
-  j.add_process(pid2)
-
-  #j.wait
-  sleep 1
-  j.kill
-
-  j.close
-end
