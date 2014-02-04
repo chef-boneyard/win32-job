@@ -1,6 +1,7 @@
 require File.join(File.dirname(__FILE__), 'job', 'constants')
 require File.join(File.dirname(__FILE__), 'job', 'functions')
 require File.join(File.dirname(__FILE__), 'job', 'structs')
+require File.join(File.dirname(__FILE__), 'job', 'helper')
 
 # The Win32 module serves as a namespace only.
 module Win32
@@ -61,7 +62,7 @@ module Win32
       @job_handle = CreateJobObject(security, name)
 
       if @job_handle == 0
-        raise SystemCallError.new('CreateJobObject', FFI.errno)
+        FFI.raise_windows_error('CreateJobObject', FFI.errno)
       end
 
       if block_given?
@@ -86,7 +87,7 @@ module Win32
       phandle = OpenProcess(PROCESS_ALL_ACCESS, false, pid)
 
       if phandle == 0
-        raise SystemCallError.new('OpenProcess', FFI.errno)
+        FFI.raise_windows_error('OpenProcess', FFI.errno)
       end
 
       pbool = FFI::MemoryPointer.new(:int)
@@ -95,7 +96,7 @@ module Win32
 
       if pbool.read_int == 0
         unless AssignProcessToJobObject(@job_handle, phandle)
-          raise SystemCallError.new('AssignProcessToJobObject', FFI.errno)
+          FFI.raise_windows_error('AssignProcessToJobObject', FFI.errno)
         end
         @process_list << pid
       else
@@ -112,22 +113,18 @@ module Win32
       @closed = true
     end
 
-    # Terminate all processes currently associated with the job.
-    def terminate
-      unless TerminateJobObject(@job_handle, 0)
-        raise SystemCallError.new('TerminateJobObject', FFI.errno)
-      end
-    end
-
-
     # Kill all processes associated with the job object that are
     # associated with the current process.
     #
     def kill
-      if TerminateJobObject(@job_handle, Process.pid) == 0
-        raise SystemCallError.new('TerminateJobObject', FFI.errno)
+      unless TerminateJobObject(@job_handle, Process.pid)
+        FFI.raise_windows_error('TerminateJobObject', FFI.errno)
       end
+
+      @process_list = []
     end
+
+    alias terminate kill
 
     # Set various job limits. Possible options are:
     #
@@ -340,7 +337,7 @@ module Win32
       )
 
       unless bool
-        raise SystemCallError.new('SetInformationJobObject', FFI.errno)
+        FFI.raise_windows_error('SetInformationJobObject', FFI.errno)
       end
 
       options
@@ -360,7 +357,7 @@ module Win32
       )
 
       unless bool
-        raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
+        FFI.raise_windows_error('QueryInformationJobObject', FFI.errno)
       end
 
       info[:ProcessIdList].to_a.select{ |n| n != 0 }
@@ -382,7 +379,7 @@ module Win32
       )
 
       unless bool
-        raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
+        FFI.raise_windows_error('QueryInformationJobObject', FFI.errno)
       end
 
       struct = AccountInfo.new(
@@ -419,7 +416,7 @@ module Win32
       )
 
       unless bool
-        raise SystemCallError.new('QueryInformationJobObject', FFI.errno)
+        FFI.raise_windows_error('QueryInformationJobObject', FFI.errno)
       end
 
       struct = LimitInfo.new(
@@ -447,6 +444,55 @@ module Win32
       struct
     end
 
+    # Waits for the processes in the job to terminate.
+    #--
+    # TODO: Implement. Will need completion ports.
+    # See http://blogs.msdn.com/b/oldnewthing/archive/2013/04/05/10407778.aspx
+    #
+    def wait
+      io_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 1)
+
+      if io_port == 0
+        FFI.raise_windows_error('CreateIoCompletionPort', FFI.errno)
+      end
+
+      port = JOBOBJECT_ASSOCIATE_COMPLETION_PORT.new
+      port[:CompletionKey] = @job_handle
+      port[:CompletionPort] = io_port
+
+      bool = SetInformationJobObject(
+        @job_handle,
+        JobObjectAssociateCompletionPortInformation,
+        port,
+        port.size
+      )
+
+      FFI.raise_windows_error('SetInformationJobObject', FFI.errno) unless bool
+
+      @process_list.each{ |pid|
+        handle = OpenProcess(PROCESS_ALL_ACCESS, false, pid)
+
+        FFI.raise_windows_error('OpenProcess', FFI.errno) unless handle
+
+        unless AssignProcessToJobObject(@job_handle, handle)
+          FFI.raise_windows_error('AssignProcessToJobObject', FFI.errno)
+        end
+
+        # TODO: Do I need to get the thread handle and explicitly close it?
+
+        CloseHandle(handle)
+
+        olap  = OVERLAPPED.new
+        bytes = FFI::MemoryPointer.new(:ulong)
+        ckey  = FFI::MemoryPointer.new(:uintptr_t)
+
+        while GetQueuedCompletionPort(io_port, bytes, ckey, olap, INFINITE) &&
+          !(ckey.read_pointer.to_i == @job_handle && ccode == JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO)
+          sleep 0.1
+        end
+      }
+    end
+
     private
 
     # Automatically close job object when it goes out of scope.
@@ -465,19 +511,19 @@ if $0 == __FILE__
   pid2 = Process.spawn("notepad.exe")
   sleep 1
 
-  #j.configure_limit(
-  #  :breakaway_ok      => true,
-  #  :kill_on_job_close => true,
-  #  :process_memory    => 1024 * 8,
-  #  :process_time      => 1000
-  #)
+  j.configure_limit(
+    :breakaway_ok      => true,
+    :kill_on_job_close => true,
+    :process_memory    => 1024 * 8,
+    :process_time      => 1000
+  )
 
   j.add_process(pid1)
   j.add_process(pid2)
 
-  sleep 5
-
-  j.terminate
+  #j.wait
+  sleep 1
+  j.kill
 
   j.close
 end
