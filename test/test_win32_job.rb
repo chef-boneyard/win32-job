@@ -71,6 +71,21 @@ class TC_Win32_Job < Test::Unit::TestCase
     assert_raise(ArgumentError){ @job.add_process }
   end
 
+  test "kill basic functionality" do
+    assert_respond_to(@job, :kill)
+  end
+
+  test "kill works as expected" do
+    @job.add_process(@pid)
+    assert_equal(@pid, @job.process_list.first)
+    assert_nothing_raised{ @job.kill }
+    assert_true(@job.process_list.empty?)
+  end
+
+  test "terminate is an alias for kill" do
+    assert_alias_method(@job, :kill, :terminate)
+  end
+
   test "configure_limit basic functionality" do
     assert_nothing_raised{ @job.configure_limit }
   end
@@ -105,7 +120,7 @@ class TC_Win32_Job < Test::Unit::TestCase
     @job.close
     @job = nil
 
-    Process.kill(9, @pid)
+    Process.kill(9, @pid) rescue nil
     @pid = nil
   end
 end
