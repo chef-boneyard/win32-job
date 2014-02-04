@@ -1,0 +1,12 @@
+* CHANGES
+* MANIFEST
+* Rakefile
+* README
+* win32-job.gemspec
+* examples\example_job.rb
+* lib\win32\job.rb
+* lib\win32\job\constants.rb
+* lib\win32\job\functions.rb
+* lib\win32\job\helper.rb
+* lib\win32\job\structs.rb
+* test\test_win32_job.rb
