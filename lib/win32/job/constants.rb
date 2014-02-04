@@ -20,6 +20,8 @@ module Windows
     JobObjectCpuRateControlInformation = 15
 
     PROCESS_ALL_ACCESS = 0x1F0FFF
+    PROCESS_SET_QUOTA = 0x0100
+    PROCESS_TERMINATE = 0x0001
     SYNCHRONIZE = 0x00100000
 
     INFINITE = 0xFFFFFFFF
