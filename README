@@ -1,13 +1,47 @@
-= Description
+== Description
   A Ruby interface to Windows' jobs, process groups for Windows.
 
-= Synopsis
+== Installation
+  gem install win32-job
+
+== Prerequisites
+  ffi
+
+== Synopsis
   require 'win32/job'
   include Win32
 
   job = Job.create('test')
 
+  j.configure_limit(
+    :breakaway_ok      => true,
+    :kill_on_job_close => true,
+    :process_memory    => 1024 * 8,
+    :process_time      => 1000
+  )
+
   job.add_process(1234)
   job.add_process(1235)
 
   job.close
+
+== Known Issues
+  None known.
+
+  Please file any bug reports on the project page at
+  http://github.com/djberg96/win32-job
+
+== License
+  Artistic 2.0
+
+== Copyright
+  (C) 2003-2013 Daniel J. Berger
+  All Rights Reserved
+
+== Warranty
+  This package is provided "as is" and without any express or
+  implied warranties, including, without limitation, the implied
+  warranties of merchantability and fitness for a particular purpose.
+
+== Author
+  Daniel J. Berger
