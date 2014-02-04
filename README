@@ -25,6 +25,9 @@
 
   job.close
 
+== Future Plans
+  Add a wait method that waits for all processes to complete.
+
 == Known Issues
   None known.
 
