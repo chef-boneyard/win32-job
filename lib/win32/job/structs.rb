@@ -2,6 +2,12 @@ require 'ffi'
 
 module Windows
   module Structs
+    extend FFI::Library
+
+    typedef :uintptr_t, :handle
+    typedef :ulong, :dword
+    typedef :ushort, :word
+
     class LARGE_INTEGER < FFI::Union
       layout(:QuadPart, :long_long)
     end
@@ -70,11 +76,58 @@ module Windows
       )
     end
 
+    class JOBOBJECT_ASSOCIATE_COMPLETION_PORT < FFI::Struct
+      layout(:CompletionKey, :uintptr_t, :CompletionPort, :handle)
+    end
+
     class SECURITY_ATTRIBUTES < FFI::Struct
       layout(
         :nLength, :ulong,
         :lpSecurityDescriptor, :pointer,
         :bInheritHandle, :bool
+      )
+    end
+
+    class PROCESS_INFORMATION < FFI::Struct
+      layout(
+        :hProcess, :handle,
+        :hThread, :handle,
+        :dwProcessId, :dword,
+        :dwThreadId, :dword
+      )
+    end
+
+    class STARTUPINFO < FFI::Struct
+      layout(
+        :cb, :ulong,
+        :lpReserved, :string,
+        :lpDesktop, :string,
+        :lpTitle, :string,
+        :dwX, :dword,
+        :dwY, :dword,
+        :dwXSize, :dword,
+        :dwYSize, :dword,
+        :dwXCountChars, :dword,
+        :dwYCountChars, :dword,
+        :dwFillAttribute, :dword,
+        :dwFlags, :dword,
+        :wShowWindow, :word,
+        :cbReserved2, :word,
+        :lpReserved2, :pointer,
+        :hStdInput, :handle,
+        :hStdOutput, :handle,
+        :hStdError, :handle
+      )
+    end
+
+    # I'm assuming the anonymous struct for the internal union here.
+    class Overlapped < FFI::Struct
+      layout(
+        :Internal, :ulong,
+        :InternalHigh, :ulong,
+        :Offset, :ulong,
+        :OffsetHigh, :ulong,
+        :hEvent, :ulong
       )
     end
 
