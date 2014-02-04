@@ -446,9 +446,12 @@ module Win32
 
     # Waits for the processes in the job to terminate.
     #--
-    # TODO: Implement. Will need completion ports.
     # See http://blogs.msdn.com/b/oldnewthing/archive/2013/04/05/10407778.aspx
     #
+    # TODO: Fix. I'm not sure this approach is feasible without the processes
+    # having been created in a suspended state.
+    #
+=begin
     def wait
       io_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 1)
 
@@ -470,10 +473,11 @@ module Win32
       FFI.raise_windows_error('SetInformationJobObject', FFI.errno) unless bool
 
       @process_list.each{ |pid|
-        handle = OpenProcess(PROCESS_ALL_ACCESS, false, pid)
+        handle = OpenProcess(PROCESS_SET_QUOTA|PROCESS_TERMINATE, false, pid)
 
         FFI.raise_windows_error('OpenProcess', FFI.errno) unless handle
 
+        # BUG: I get access denied errors here.
         unless AssignProcessToJobObject(@job_handle, handle)
           FFI.raise_windows_error('AssignProcessToJobObject', FFI.errno)
         end
@@ -492,6 +496,7 @@ module Win32
         end
       }
     end
+=end
 
     private
 
