@@ -17,7 +17,7 @@ namespace :gem do
   end
 
   desc 'Install the win32-job gem'
-  task :install => [:gem] do
+  task :install => [:create] do
     file = Dir["*.gem"].first
     sh "gem install #{file}"
   end
