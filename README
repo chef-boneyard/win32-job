@@ -5,7 +5,8 @@
   gem install win32-job
 
 == Prerequisites
-  ffi
+  * ffi
+  * Ruby 1.9.3 or later
 
 == Synopsis
   require 'win32/job'
@@ -25,9 +26,6 @@
 
   job.close
 
-== Future Plans
-  Add a wait method that waits for all processes to complete.
-
 == Known Issues
   None known.
 
@@ -38,7 +36,7 @@
   Artistic 2.0
 
 == Copyright
-  (C) 2003-2013 Daniel J. Berger
+  (C) 2003-2014 Daniel J. Berger
   All Rights Reserved
 
 == Warranty
@@ -46,5 +44,6 @@
   implied warranties, including, without limitation, the implied
   warranties of merchantability and fitness for a particular purpose.
 
-== Author
+== Authors
   Daniel J. Berger
+  Park Heesob
