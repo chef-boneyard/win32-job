@@ -1,2 +1,5 @@
+= 0.1.1 - 5-Feb-2014
+* Added a wait method.
+
 = 0.1.0 - 4-Feb-2014
 * Initial release.
