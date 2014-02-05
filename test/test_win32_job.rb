@@ -15,7 +15,7 @@ class TC_Win32_Job < Test::Unit::TestCase
   end
 
   test "version number is what we expect" do
-    assert_equal('0.1.0', Win32::Job::VERSION)
+    assert_equal('0.1.1', Win32::Job::VERSION)
   end
 
   test "constructor argument may be omitted" do
@@ -103,6 +103,10 @@ class TC_Win32_Job < Test::Unit::TestCase
 
   test "configure_limit raises an error if it detects an invalid option" do
     assert_raise(ArgumentError){ @job.configure_limit(:bogus => 1) }
+  end
+
+  test "wait method basic functionality" do
+    assert_respond_to(@job, :wait)
   end
 
   test "priority constants are defined" do
