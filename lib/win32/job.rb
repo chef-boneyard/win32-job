@@ -14,7 +14,7 @@ module Win32
     extend Windows::Functions
 
     # The version of the win32-job library
-    VERSION = '0.1.0'
+    VERSION = '0.1.1'
 
     private
 
@@ -448,9 +448,6 @@ module Win32
     #--
     # See http://blogs.msdn.com/b/oldnewthing/archive/2013/04/05/10407778.aspx
     #
-    # TODO: Fix. I'm not sure this approach is feasible without the processes
-    # having been created in a suspended state.
-    #
     def wait
       io_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 1)
 
@@ -474,9 +471,10 @@ module Win32
       olap  = FFI::MemoryPointer.new(Overlapped)
       bytes = FFI::MemoryPointer.new(:ulong)
       ckey  = FFI::MemoryPointer.new(:uintptr_t)
+
       while GetQueuedCompletionStatus(io_port, bytes, ckey, olap, INFINITE) &&
           !(ckey.read_pointer.to_i == @job_handle && bytes.read_ulong == JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO)
-          sleep 0.1
+        sleep 0.1
       end
     end
 
