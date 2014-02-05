@@ -451,7 +451,6 @@ module Win32
     # TODO: Fix. I'm not sure this approach is feasible without the processes
     # having been created in a suspended state.
     #
-=begin
     def wait
       io_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 1)
 
@@ -472,31 +471,14 @@ module Win32
 
       FFI.raise_windows_error('SetInformationJobObject', FFI.errno) unless bool
 
-      @process_list.each{ |pid|
-        handle = OpenProcess(PROCESS_SET_QUOTA|PROCESS_TERMINATE, false, pid)
-
-        FFI.raise_windows_error('OpenProcess', FFI.errno) unless handle
-
-        # BUG: I get access denied errors here.
-        unless AssignProcessToJobObject(@job_handle, handle)
-          FFI.raise_windows_error('AssignProcessToJobObject', FFI.errno)
-        end
-
-        # TODO: Do I need to get the thread handle and explicitly close it?
-
-        CloseHandle(handle)
-
-        olap  = OVERLAPPED.new
-        bytes = FFI::MemoryPointer.new(:ulong)
-        ckey  = FFI::MemoryPointer.new(:uintptr_t)
-
-        while GetQueuedCompletionPort(io_port, bytes, ckey, olap, INFINITE) &&
-          !(ckey.read_pointer.to_i == @job_handle && ccode == JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO)
+      olap  = FFI::MemoryPointer.new(Overlapped)
+      bytes = FFI::MemoryPointer.new(:ulong)
+      ckey  = FFI::MemoryPointer.new(:uintptr_t)
+      while GetQueuedCompletionStatus(io_port, bytes, ckey, olap, INFINITE) &&
+          !(ckey.read_pointer.to_i == @job_handle && bytes.read_ulong == JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO)
           sleep 0.1
-        end
-      }
+      end
     end
-=end
 
     private
 
