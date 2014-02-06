@@ -15,7 +15,7 @@ class TC_Win32_Job < Test::Unit::TestCase
   end
 
   test "version number is what we expect" do
-    assert_equal('0.1.1', Win32::Job::VERSION)
+    assert_equal('0.1.2', Win32::Job::VERSION)
   end
 
   test "constructor argument may be omitted" do
@@ -26,8 +26,17 @@ class TC_Win32_Job < Test::Unit::TestCase
     assert_nothing_raised{ Win32::Job.new(@name) }
   end
 
+  test "constructor accepts a second argument" do
+    assert_nothing_raised{ Win32::Job.new(@name, true) }
+  end
+
   test "argument to constructor must be a string" do
     assert_raise(TypeError){ Win32::Job.new(1) }
+  end
+
+  test "if second argument to constructor is false, an error is raised if the same job is reopened" do
+    @job = Win32::Job.new('test')
+    assert_raise(ArgumentError){ Win32::Job.new('test', false) }
   end
 
   test "job_name basic functionality" do
