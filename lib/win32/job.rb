@@ -87,6 +87,10 @@ module Win32
     # Add process +pid+ to the job object. Process ID's added to the
     # job are tracked via the Job#process_list accessor.
     #
+    # Note that once a process is added to a job, the association cannot be
+    # broken. A process can be associated with more than one job in a
+    # hierarchy of nested jobs, however.
+    #
     # You may add a maximum of 100 processes per job.
     #
     def add_process(pid)
@@ -125,6 +129,8 @@ module Win32
 
     # Kill all processes associated with the job object that are
     # associated with the current process.
+    #
+    # Note that killing a process does not dissociate it from the job.
     #
     def kill
       unless TerminateJobObject(@job_handle, Process.pid)
