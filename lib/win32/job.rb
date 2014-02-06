@@ -14,7 +14,7 @@ module Win32
     extend Windows::Functions
 
     # The version of the win32-job library
-    VERSION = '0.1.1'
+    VERSION = '0.1.2'
 
     private
 
@@ -41,6 +41,7 @@ module Win32
 
     public
 
+    # The name of the job, if specified.
     attr_reader :job_name
 
     alias :name :job_name
@@ -48,11 +49,14 @@ module Win32
     # Create a new Job object identified by +name+. If no name is provided
     # then an anonymous job is created.
     #
-    # If the +kill_on_close+ argument is true, all associated processes are
-    # terminated and the job object then destroys itself. Otherwise, the job
-    # object will not be destroyed until all associated processes have exited.
+    # If the job already exists then the existing job is opened instead, unless
+    # the +open_existing+ method is false. In that case an error is
+    # raised.
     #
-    def initialize(name = nil, security = nil)
+    # The +security+ argument accepts a raw SECURITY_ATTRIBUTES struct that is
+    # passed to the CreateJobObject function internally.
+    #
+    def initialize(name = nil, open_existing = true, security = nil)
       raise TypeError unless name.is_a?(String) if name
 
       @job_name = name
@@ -63,6 +67,10 @@ module Win32
 
       if @job_handle == 0
         FFI.raise_windows_error('CreateJobObject', FFI.errno)
+      end
+
+      if FFI.errno == ERROR_ALREADY_EXISTS && !open_existing
+        raise ArgumentError, "job '#{name}' already exists"
       end
 
       if block_given?
