@@ -87,6 +87,8 @@ module Win32
     # Add process +pid+ to the job object. Process ID's added to the
     # job are tracked via the Job#process_list accessor.
     #
+    # You may add a maximum of 100 processes per job.
+    #
     def add_process(pid)
       if @process_list.size > 99
         raise ArgumentError, "maximum number of processes reached"
