@@ -376,7 +376,7 @@ module Win32
         FFI.raise_windows_error('QueryInformationJobObject', FFI.errno)
       end
 
-      info[:ProcessIdList].to_a.select{ |n| n != 0 }
+      info[:ProcessIdList].to_a[0...info[:NumberOfProcessIdsInList]]
     end
 
     # Returns an AccountInfoStruct that shows various job accounting
