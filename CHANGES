@@ -2,6 +2,7 @@
 * Altered the constructor. The second argument now controls whether or not
   to raise an error if the job already exists. By default it will open the job
   if it already exists.
+* Fixed a bug in the process_list method where it could return incorrect values.
 
 = 0.1.1 - 5-Feb-2014
 * Added a wait method.
