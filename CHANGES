@@ -1,6 +1,7 @@
 = 0.1.3 - 20-Oct-2014
 * Updates to the gem:create and gem:install tasks.
 * Removed references to Rubyforge in the gemspec.
+* Use relative_require where appropriate.
 
 = 0.1.2 - 6-Feb-2014
 * Altered the constructor. The second argument now controls whether or not
