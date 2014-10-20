@@ -6,7 +6,7 @@ CLEAN.include("**/*.gem", "**/*.rbc", "**/*.rbx")
 
 namespace :gem do
   desc 'Create the win32-job gem'
-  task :create do
+  task :create => [:clean] do
     spec = eval(IO.read('win32-job.gemspec'))
     if Gem::VERSION < "2.0"
       Gem::Builder.new(spec).build
@@ -19,7 +19,7 @@ namespace :gem do
   desc 'Install the win32-job gem'
   task :install => [:create] do
     file = Dir["*.gem"].first
-    sh "gem install #{file}"
+    sh "gem install -l #{file}"
   end
 end
 
