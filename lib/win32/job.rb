@@ -1,7 +1,7 @@
-require File.join(File.dirname(__FILE__), 'job', 'constants')
-require File.join(File.dirname(__FILE__), 'job', 'functions')
-require File.join(File.dirname(__FILE__), 'job', 'structs')
-require File.join(File.dirname(__FILE__), 'job', 'helper')
+require_relative 'job/constants'
+require_relative 'job/functions'
+require_relative 'job/structs'
+require_relative 'job/helper'
 
 # The Win32 module serves as a namespace only.
 module Win32
@@ -14,7 +14,7 @@ module Win32
     extend Windows::Functions
 
     # The version of the win32-job library
-    VERSION = '0.1.2'
+    VERSION = '0.1.3'
 
     private
 
