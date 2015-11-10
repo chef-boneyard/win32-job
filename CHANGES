@@ -1,3 +1,9 @@
+= 0.1.4 - 10-Nov-2015
+* This gem is now signed.
+* The gem related tasks in the Rakefile now assume Rubygems 2.x.
+* Added a win32-job.rb file for convenience.
+* Added an appveyor.yml file for the MS continuous integration service.
+
 = 0.1.3 - 20-Oct-2014
 * Updates to the gem:create and gem:install tasks.
 * Removed references to Rubyforge in the gemspec.
