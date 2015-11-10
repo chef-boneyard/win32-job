@@ -4,6 +4,8 @@
 * README
 * win32-job.gemspec
 * examples\example_job.rb
+* certs\djberg96_pub.pem
+* lib\win32-job.rb
 * lib\win32\job.rb
 * lib\win32\job\constants.rb
 * lib\win32\job\functions.rb
