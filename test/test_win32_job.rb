@@ -15,7 +15,7 @@ class TC_Win32_Job < Test::Unit::TestCase
   end
 
   test "version number is what we expect" do
-    assert_equal('0.1.3', Win32::Job::VERSION)
+    assert_equal('0.1.4', Win32::Job::VERSION)
   end
 
   test "constructor argument may be omitted" do

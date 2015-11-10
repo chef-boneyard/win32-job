@@ -14,7 +14,7 @@ module Win32
     extend Windows::Functions
 
     # The version of the win32-job library
-    VERSION = '0.1.3'
+    VERSION = '0.1.4'
 
     private
 
